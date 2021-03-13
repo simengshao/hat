@@ -1,0 +1,154 @@
+---
+title: "Tutorial to Use the HAT Package in R"
+output: rmarkdown::html_vignette
+bibliography: citation.bib
+vignette: >
+  %\VignetteIndexEntry{Tutorial to Use the HAT Package in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Hierarchical Aggregation through Testing (HAT)
+### Simeng Shao
+#### February 25, 2021
+
+The `hat` package implements a hierarchical aggregation algorithm, as described in the paper "Controlling the False Split Rate in Tree-Based Aggregation". The package includes the hierarchical testing function that determines aggregation of leaves with False Split Rate (FSR) control, as well as two applications: (1) aggregating observations with the same means and (2) aggregating features with the same coefficients in linear regression.
+
+We use two real data examples as representatives of the two applications mentioned above to demonstrate how to use the package. 
+
+* [Application of observation aggregation](#observation)
+* [Application of feature aggregation](#feature)
+
+<a id="observation"></a>
+
+
+## Application of observation aggregation
+
+### First Let's Look at the Data
+
+This section is an example of using the package to achieve aggregation of observations based on their means. We calculate volatility of daily stocks price data that are derived from the US Stock Database ©2021 Center for Research in Security Prices (CRSP), The University of Chicago Booth School of Business @CRSP.
+
+The tree structure is constructed based on the North American Industry Classification System ([NAICS](https://www.census.gov/naics/)), an industry classification system that employs a six digit code: the first two digits designate the largest sector; the third, fourth, fifth and sixth digits designate the subsector, industry group, industry, and national industry, respectively. 
+
+One can load the volatility data and pre-trained tree structure into our environment:
+
+```{r, eval=T, include=T}
+library(hat)
+nrow(stocks_volatility)
+colnames(stocks_volatility)
+```
+
+The `stocks_volatility` data set contains `r nrow(stocks_volatility)` stocks' corresponding company names and the volatility during the 5-year period.
+
+The distribution of volatility is right-skewed. Therefore, in our analysis, we will take the logrithm to reduce skew.
+
+The tree structure is saved in `stocks_tree`, which is formed according to the NAICS hierarchy. We can look at the tree structure by using the function `plot_hc_list()`. However, we omit this for now because we will see the tree again very soon.
+
+### Now We Can Aggregate
+
+The idea of aggregation is based on the fact that some companies might share the same mean volatility of stock if they are "similar enough". We assume a model
+
+\[
+y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
+\]
+
+where in the stocks example $y_i$'s are the volatility of the $p$ stocks. We will use the tree as a guid as it descirbes the similarity among companies and therefore helps narrow down reasonable aggregations to consider.
+
+Our algorithm achieves aggregation in two main steps:
+
+1. Generate a p-values by an ANOVA test for each interior node.
+
+2. Test sequentially on the tree and determine aggregation by the testing result.
+
+The function `aggregate_observations` can do both steps autonomously:
+
+```{r, eval=T, include=T}
+result = aggregate_observations(y = log(stocks_volatility$volatility), 
+                       sigma_constant = NULL, 
+                       hc_list = stocks_tree, 
+                       alpha_level = 0.4)
+groups = result$groups
+```
+
+* `sigma`: standard deviation of noise $\epsilon$'s (Set to null if unkown).
+
+* `hc_list`: a list of length-$|\mathcal{T}\setminus \mathcal{L}|$ that describes the tree structure. The $i$-th item of the list contains the children of the $i$-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. The object 'stocks_tree' in our package is an example of such structure. The function can also work with 'hclust' (if binary tree) or 'dendrogram' objects, only one of the three is required.
+
+* `alpha_level`: target FSR level.
+
+The output `result` is a list that have three components: `alpha` is the target FSR level, `groups` indicate the aggregated group result of observations, `rejections` indicate if each interior nodes are rejected (this will come in handy for plotting aggregation result on a tree).
+
+The achieved aggregation result contains `r length(unique(groups))` groups. We plot achieved aggregation on the tree using the function 'plot_aggregation' (a bit busy as since are >2k stocks...)
+
+```{r, fig.height=4, fig.width=7, eval=T, include=T}
+plot_aggregation(rejections = result$rejections, hc_list = stocks_tree)
+```
+
+For this example we calculate the nodewise p-values by F-tests that are built inside the function `aggregate_observations`. However, if the p-values can be acquired by some other methods, our package provides a function `hierarchical_test` that achieves aggregation through hierarchical testing. We provide an example below wher we simulate p-values.
+
+```{r, eval=F, include= T, message = F}
+ps = ifelse(result$rejections, runif(1), rbeta(1,1,60))
+result = hierarchical_test(hc_list = stocks_tree, 
+                           p_vals = ps, 
+                           alpha_level = 0.4, 
+                           independent = FALSE)
+```
+
+The function `hierarchical_test` takes the length-`num_interior_node` vector of p-values and hierarchically tests on the tree while maintaining the False Split Rate (FSR) under the target level. The final testing result determines an aggregation of the leaves.
+
+<a id="feature"></a>
+
+## Application of feature aggregation
+
+```{r, eval=T, include=F}
+set.seed(1234)
+n = 100
+p = 50
+k = 10
+hc = hclust(dist((1:p) + runif(p)/p), method = "complete")
+groups = cutree(hc, k)
+coeffs = runif(k, 0, 18)[groups]
+X = matrix(rnorm(p * n), nrow = n, ncol = p)
+X = X * matrix(rbinom(n*p, size = 1, prob = 0.6),nrow = n, ncol = p)
+y = X %*% coeffs + rnorm(n)
+```
+
+For this application, we will synthetize data for feature aggregating. We randomly generate a tree with `r p` leaves by hierarchical clustering, and cut the tree into `r k` disjoint groups. Then we simulate `r k` coefficient values corresponding to the `r k` groups.
+To mimick the scenario of rare features (@Yan2018RareFS), we generate a design matrix $X$ by a Gaussian-Bernoulli distribution.
+Finally, we build a linear model with gaussian noise as the response vector $y$.
+
+To perform aggregation, we can use the function `aggregate_features`. The input requires 
+
+- `y`: response vector.
+
+- `X`: design matrix.
+
+- `hc`: an object that describes the tree structure. Since here we have a binary tree, we use a `hc = hclust` object. Alternatively, one can also use `dend = dendrogram` or `hc_list = hc_list` if they have a non-binary tree that is saved in the format of 'dendrogram' or 'hc_list'.
+
+- `alpha_level`: target FSR level.
+
+```{r, eval=T, include=T}
+agg_result = aggregate_features(y = y, X = X,
+                          hc = hc, alpha_level = 0.2)
+```
+
+For calculating FSP we can use 
+
+```{r, eval=T, include=T}
+calculate_fsp(theta_est = agg_result$groups, theta_true = groups)
+```
+
+
+
+### References
+
+
+
+

@@ -1,0 +1,32 @@
+Package: hat
+Title: Hierarchical Aggregation through Testing
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Simeng",
+           family = "Shao",
+           role = c("aut", "cre"),
+           email = "simengsh@marshall.usc.edu")
+Description: This package achieves aggregation based on a tree while controling False Split Rate under a pre-specified level, as described in the paper "Controlling the False Split Rate in Tree-Based Aggregation". This package includes a function that performs the hierarchical testing procedure, as well as two functions that achieve aggregation in the two main applications: (a) Aggregate observations with the same means. (b) Aggregate features with the same coefficients in linear regression.
+Depends: R (>= 3.6.2)
+Imports: 
+    dendextend (>= 1.14.0),
+    glmnet (>= 4.0-2),
+    lpSolve (>= 5.6.15),
+    Matrix (>= 1.2-18),
+    quadprog (>= 1.5-8),
+    rare (>= 0.1.1),
+    scalreg (>= 1.0.1)
+Suggests: 
+    knitr,
+    Rmarkdown,
+    CVXR (>= 1.0-1),
+    RColorBrewer (>= 1.1-2),
+    rmarkdown,
+    testthat (>= 2.0.0)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+VignetteBuilder: knitr
+Config/testthat/edition: 2

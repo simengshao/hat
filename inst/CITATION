@@ -1,0 +1,15 @@
+citHeader("To cite hat in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "hat: Hierarchical Aggregation through Testing",
+  author   = personList(as.person("Simeng Shao"),
+                   as.person("Jacob Bien"),
+                   as.person("Adel Javanmard")),
+  year     = "2021",
+  note     = "R package version 0.0.0.9",
+  url      = "https://CRAN.R-project.org/package=hat",
+  textVersion = paste("Simeng Shao, Jacob Bien, Adel Javanmard (2021).", "Hierarchical Aggregation through Testing.",
+                      "R package version 0.0.0.9.", "https://CRAN.R-project.org/package=hat."
+  )
+)
