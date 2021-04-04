@@ -15,23 +15,27 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Hierarchical Aggregation through Testing (HAT)
 ### Simeng Shao
 #### February 25, 2021
 
-The `hat` package implements a hierarchical aggregation algorithm, as described in the paper "Controlling the False Split Rate in Tree-Based Aggregation". The package includes the hierarchical testing function that determines aggregation of leaves with False Split Rate (FSR) control, as well as two applications: (1) aggregating observations with the same means and (2) aggregating features with the same coefficients in linear regression.
+The `hat` package implements a hierarchical aggregation testing algorithm, as described in the paper "Controlling the False Split Rate in Tree-Based Aggregation". The package implements a hierarchical testing function that determines how to aggregate leaves with while controlling the *false split rate* (FSR), an error measure defined in the above paper.  There are two primary use cases considered in the paper:
 
-We use two real data examples as representatives of the two applications mentioned above to demonstrate how to use the package. 
+1. aggregating observations with the same means and
 
-* [Application of observation aggregation](#observation)
-* [Application of feature aggregation](#feature)
+2. aggregating features with the same coefficients in linear regression.
+
+We provide examples of these two use cases and then demonstrate a more general example of the hierarchical aggregation procedure.
+
+* [Application to observation aggregation](#observation)
+* [Application to feature aggregation](#feature)
+* [General example](#general)
 
 <a id="observation"></a>
 
 
-## Application of observation aggregation
+## Application to observation aggregation
 
-### First Let's Look at the Data
+### Brief look at the data
 
 This section is an example of using the package to achieve aggregation of observations based on their means. We calculate volatility of daily stocks price data that are derived from the US Stock Database ©2021 Center for Research in Security Prices (CRSP), The University of Chicago Booth School of Business @CRSP.
 
@@ -47,65 +51,53 @@ colnames(stocks_volatility)
 
 The `stocks_volatility` data set contains `r nrow(stocks_volatility)` stocks' corresponding company names and the volatility during the 5-year period.
 
-The distribution of volatility is right-skewed. Therefore, in our analysis, we will take the logrithm to reduce skew.
+The distribution of volatility is right-skewed. Therefore, in our analysis, we will take the logarithm to reduce skew.
 
 The tree structure is saved in `stocks_tree`, which is formed according to the NAICS hierarchy. We can look at the tree structure by using the function `plot_hc_list()`. However, we omit this for now because we will see the tree again very soon.
 
-### Now We Can Aggregate
+### Aggregating observations
 
-The idea of aggregation is based on the fact that some companies might share the same mean volatility of stock if they are "similar enough". We assume a model
+The idea of aggregation is based on the fact that some companies might share the same mean volatility of stock if they are "similar enough" in the tree. We assume a model
 
 \[
 y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 \]
 
-where in the stocks example $y_i$'s are the volatility of the $p$ stocks. We will use the tree as a guid as it descirbes the similarity among companies and therefore helps narrow down reasonable aggregations to consider.
+where, in the stocks example, $y_i$ is the volatility of the $i$-th stock. We will use the tree as a guide as it describes the similarity among companies and therefore helps narrow down reasonable aggregations to consider.
 
 Our algorithm achieves aggregation in two main steps:
 
-1. Generate a p-values by an ANOVA test for each interior node.
+1. Generate a p-value by an ANOVA test for each interior node.
 
-2. Test sequentially on the tree and determine aggregation by the testing result.
+2. Use the hierarchical aggregation testing procedure to sequentially go down the tree in a fashion that will control the FSR of the overall aggregation of leaves that is produced.
 
-The function `aggregate_observations` can do both steps autonomously:
+The function `aggregate_observations` performs both of these steps:
 
 ```{r, eval=T, include=T}
 result = aggregate_observations(y = log(stocks_volatility$volatility), 
                        sigma_constant = NULL, 
                        hc_list = stocks_tree, 
                        alpha_level = 0.4)
-groups = result$groups
 ```
 
-* `sigma`: standard deviation of noise $\epsilon$'s (Set to null if unkown).
+* `sigma_constant`: standard deviation of noise $\epsilon$'s, if known.  If `sigma_constant` is non-`NULL`, then a chi-squared null distribution is used; if `sigma_constant` is `NULL`, then an F-test is performed.
 
-* `hc_list`: a list of length-$|\mathcal{T}\setminus \mathcal{L}|$ that describes the tree structure. The $i$-th item of the list contains the children of the $i$-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. The object 'stocks_tree' in our package is an example of such structure. The function can also work with 'hclust' (if binary tree) or 'dendrogram' objects, only one of the three is required.
+* `hc_list`: a list of length-$|\mathcal{T}\setminus \mathcal{L}|$ that describes the tree structure. This format is a generalization of the `merge` matrix within an `hclust` object.  The element `hc_list[[i]]` contains the children of the $i$-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. For example, if `hc_list[[i]][j]` is positive, that means that node `hc_list[[i]]` is a parent of  node `hc_list[[j]]`.  The object `stocks_tree` in our package is an example of such a structure. The function can also work with `hclust` objects (for binary trees) or `dendrogram` objects (for more general trees).  Only one of the three is required.  The functions `dend_as_hclist` and `hclist_as_dend` allow one to switch between formats.
 
 * `alpha_level`: target FSR level.
 
-The output `result` is a list that have three components: `alpha` is the target FSR level, `groups` indicate the aggregated group result of observations, `rejections` indicate if each interior nodes are rejected (this will come in handy for plotting aggregation result on a tree).
+The output `result` is a list that has three components: `alpha` is the target FSR level, `groups` gives the group assignments of the observations, and `rejections` indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree).
 
-The achieved aggregation result contains `r length(unique(groups))` groups. We plot achieved aggregation on the tree using the function 'plot_aggregation' (a bit busy as since are >2k stocks...)
+In this example, the achieved aggregation result contains `r length(unique(result$groups))` groups. We plot the achieved aggregation on the tree using the function `plot_aggregation` (a bit busy as since are >2k stocks...).
 
 ```{r, fig.height=4, fig.width=7, eval=T, include=T}
 plot_aggregation(rejections = result$rejections, hc_list = stocks_tree)
 ```
 
-For this example we calculate the nodewise p-values by F-tests that are built inside the function `aggregate_observations`. However, if the p-values can be acquired by some other methods, our package provides a function `hierarchical_test` that achieves aggregation through hierarchical testing. We provide an example below wher we simulate p-values.
-
-```{r, eval=F, include= T, message = F}
-ps = ifelse(result$rejections, runif(1), rbeta(1,1,60))
-result = hierarchical_test(hc_list = stocks_tree, 
-                           p_vals = ps, 
-                           alpha_level = 0.4, 
-                           independent = FALSE)
-```
-
-The function `hierarchical_test` takes the length-`num_interior_node` vector of p-values and hierarchically tests on the tree while maintaining the False Split Rate (FSR) under the target level. The final testing result determines an aggregation of the leaves.
 
 <a id="feature"></a>
 
-## Application of feature aggregation
+## Application to feature aggregation
 
 ```{r, eval=T, include=F}
 set.seed(1234)
@@ -144,6 +136,41 @@ For calculating FSP we can use
 ```{r, eval=T, include=T}
 calculate_fsp(theta_est = agg_result$groups, theta_true = groups)
 ```
+
+<a id="general"></a>
+
+## General example
+
+The functions `aggregate_observations` and `aggregate_features` shown above both make use of the hierarchical aggregation testing framework introduced in the paper "Controlling the False Split Rate in Tree-Based Aggregation".  Internally, both functions call a more general function called `hierarchical_testing`.  If a user has a different way to construct nodewise p-values for aggregation, then the user should use `hierarchical_testing` as shown here.
+
+This function takes a length-`num_interior_node` vector of p-values.
+
+Here is a small example:
+
+```{r}
+set.seed(123)
+n <- 20
+hc <- hclust(dist(runif(n)))
+de <- as.dendrogram(hc)
+hc_list <- dend_as_hclist(de)
+
+# compute_my_pvalue <- function(u) {
+#   # Example of a customized pvalue function:
+#   # u an element of hc_list
+#   
+#   # compute something more interesting than just runif here.
+#   
+#   # hc_list[[u]]
+# }
+# 
+# result_small <- hierarchical_test(hc_list = hc_list, 
+#                   p_vals = lapply(hc_list, compute_my_pvalue),
+#                   alpha_level = 0.4, 
+#                   independent = FALSE)
+# 
+# plot_aggregation(rejections = result_small$rejections, hc_list = hc_list)
+```
+
 
 
 
