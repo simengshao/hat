@@ -1,48 +1,40 @@
 #' Visualize the Tree Structure
 #'
 #' This function plots a tree structure. The tree structure can be represented by a variety of object formats: \code{dendrogram}, \code{hclust} or a list (\code{hc_list}).
-#' @param hc_list A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.
-#' @param hc An object of class \code{hclust}. Only required if \code{dend} is NULL.
-#' @param dend An object of class \code{dendrogram}. When dend is NULL, the function will learn \code{dend} from \code{hc}.
+#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
 #' @param iflabel A boolean variable indicating whether leaves should be labeled.
 #' @param labels A vector of length-\code{n-leaf} of labels corresponding to each leaf.
 #' @examples
 #' ## Example 1: Plot an hc object
 #' hc = hclust(dist(USArrests), "ave")
 #' labels = rownames(USArrests)[hc$order]
-#' plot_hc_list(hc = hc, iflabel = TRUE)
-#'
+#' plot_tree(tree = hc, iflabel = TRUE)
 #' ## Example 2: Plot a dendrogram object
 #' dend = as.dendrogram(hc)
-#' plot_hc_list(dend = dend, iflabel = TRUE)
+#' plot_tree(tree = dend, iflabel = TRUE)
 #' ## Example 3: Plot a hc_list object
 #' dah = dend_as_hclist(dend)
-#' plot_hc_list(hc_list = dah$hc_list, iflabel = TRUE, labels = dah$leaf_labels)
+#' labels = attr(dah, "leaf_labels")
+#' plot_tree(tree = dah, iflabel = TRUE, labels = labels)
 #' @importFrom graphics par plot segments text
 #' @importFrom stats is.leaf runif as.dendrogram
 #' @export
-plot_hc_list = function(hc_list = NULL, iflabel = FALSE, labels = NULL, hc = NULL, dend = NULL){
+plot_tree = function(tree = NULL, iflabel = FALSE, labels = NULL){
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
-  if(is.null(hc_list)){
-    if(is.null(hc)){
-      if(class(dend) != "dendrogram"){
-        stop("The tree needs to be an dendrogram object.")
-      }else{
+  if(class(tree) == "dendrogram"){
+        dah = dend_as_hclist(tree)
+        hc_list = dah
+        labels = attr(dah, "leaf_labels")
+    }else if(class(tree) == "hclust"){
+        dend = as.dendrogram(tree)
         dah = dend_as_hclist(dend)
-        hc_list = dah$hc_list
-        labels = dah$leaf_labels
-      }
+        hc_list = dah
+        labels = attr(dah, "leaf_labels")
+    }else if(class(tree) == "list"){
+      hc_list = tree
     }else{
-      if(class(hc) != "hclust"){
-        stop("The tree needs to be an hclust object.")
-      }else{
-        dend = as.dendrogram(hc)
-        dah = dend_as_hclist(dend)
-        hc_list = dah$hc_list
-        labels = dah$leaf_labels
-      }
-    }
+      stop("No proper tree structure is provided.")
   }
   nolabel = all(is.na(labels))
   if(iflabel == TRUE){
@@ -112,9 +104,7 @@ plot_hc_list = function(hc_list = NULL, iflabel = FALSE, labels = NULL, hc = NUL
 #' @param rejections A vector of length-\code{num_interior_nodes} indicating if each node is rejected. When coloring with true aggregation, this vector indicate whether each interior node is a non-null node.
 #' @param iflabel A boolean variable indicating whether leaves should be labeled.
 #' @param labels A vector of length-\code{n-leaf} of labels corresponding to each leaf.
-#' @param hc_list A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.
-#' @param hc An object of class \code{hclust}. Only required if \code{dend} is NULL.
-#' @param dend An object of class \code{dendrogram}. When dend is NULL, the function will learn \code{dend} from \code{hc}.
+#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
 #' ## Example 1: Plot an hc object
 #' hc = hclust(dist(USArrests), "ave")
 #' labels = rownames(USArrests)[hc$order]
@@ -130,33 +120,28 @@ plot_hc_list = function(hc_list = NULL, iflabel = FALSE, labels = NULL, hc = NUL
 #' hc = hclust(dist(USArrests), "ave")
 #' dend = as.dendrogram(hc)
 #' dah = dend_as_hclist(dend)
-#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = dah$leaf_labels, hc_list = dah$hc_list)
+#' labels = attr(dend, "leaf_labels")
+#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, hc_list = dah)
 #' @importFrom graphics par plot segments text
 #' @importFrom stats is.leaf runif
 #' @export
-plot_aggregation = function(rejections, iflabel = FALSE, labels = NULL, hc_list=NULL, hc = NULL, dend = NULL){
+plot_aggregation = function(rejections, iflabel = FALSE, labels = NULL, tree=NULL){
 
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
-  if(is.null(hc_list)){
-    if(is.null(hc)){
-      if(class(dend) != "dendrogram"){
-        stop("The tree needs to be an dendrogram object.")
-      }else{
-        dah = dend_as_hclist(dend)
-        hc_list = dah$hc_list
-        labels = dah$leaf_labels
-      }
-    }else{
-      if(class(hc) != "hclust"){
-        stop("The tree needs to be an hclust object.")
-      }else{
-        dend = as.dendrogram(hc)
-        dah = dend_as_hclist(dend)
-        hc_list = dah$hc_list
-        labels = dah$leaf_labels
-      }
-    }
+  if(class(tree) == "dendrogram"){
+    dah = dend_as_hclist(tree)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "hclust"){
+    dend = as.dendrogram(tree)
+    dah = dend_as_hclist(dend)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "list"){
+    hc_list = tree
+  }else{
+    stop("No proper tree structure is provided.")
   }
 
   nolabel = all(is.na(labels))

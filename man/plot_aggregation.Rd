@@ -4,14 +4,7 @@
 \alias{plot_aggregation}
 \title{Visualize Aggregation on the Tree}
 \usage{
-plot_aggregation(
-  rejections,
-  iflabel = FALSE,
-  labels = NULL,
-  hc_list = NULL,
-  hc = NULL,
-  dend = NULL
-)
+plot_aggregation(rejections, iflabel = FALSE, labels = NULL, tree = NULL)
 }
 \arguments{
 \item{rejections}{A vector of length-\code{num_interior_nodes} indicating if each node is rejected. When coloring with true aggregation, this vector indicate whether each interior node is a non-null node.}
@@ -20,11 +13,7 @@ plot_aggregation(
 
 \item{labels}{A vector of length-\code{n-leaf} of labels corresponding to each leaf.}
 
-\item{hc_list}{A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.}
-
-\item{hc}{An object of class \code{hclust}. Only required if \code{dend} is NULL.}
-
-\item{dend}{An object of class \code{dendrogram}. When dend is NULL, the function will learn \code{dend} from \code{hc}.
+\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
 \subsection{Example 1: Plot an hc object}{
 
 hc = hclust(dist(USArrests), "ave")
@@ -44,7 +33,8 @@ plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, d
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 dah = dend_as_hclist(dend)
-plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = dah$leaf_labels, hc_list = dah$hc_list)
+labels = attr(dend, "leaf_labels")
+plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, hc_list = dah)
 }}
 }
 \description{

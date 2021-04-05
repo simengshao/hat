@@ -144,20 +144,18 @@ pvalue_group_all = function(hc_list, X, Sigma_hat, Dmat=NULL, hbeta, hsigma, y, 
 #' The aggregation is achieved by two steps: (1) Generate p-values for each interior node (2) Sequentially test on the tree.
 #' @param y A length-\code{n-observation} response vector that guides the aggregation
 #' @param X An \code{n-observation}-by-\code{n-feature} design matrix. Each row corresponds to a subject and each column stores the observation of a feature made by subjects.
-#' @param sigma_constant Standard deviation of noise.
-#' @param hc An object of class \code{hclust}.
-#' @param dend An object of class \code{dendrogram}.
-#' @param hc_list A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.
-#' @param alpha_level A use-specified target FSR level
+#' @param sigma Standard deviation of noise. If not given, the algorithm will estimate sigma.
+#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @param alpha A use-specified target FSR level
 #' @return Returns the aggregation result.
 #' \item{alpha}{The target FSR level.}
 #' \item{groups}{A length-\code{n-feature} vector of integers indicating the cluster to which each feature is allocated.}
 #' \item{rejections}{A length-(\code{num_interior_nodes}) vector indicating whether each node is rejected.}
 #' @examples
-#' ## See vignette for data example.
+#' ## See vignette for a small data example.
 #' @importFrom stats pnorm runif sd
 #' @export
-aggregate_features = function(y, X, sigma_constant = NULL, hc= NULL, dend = NULL, hc_list = NULL, alpha_level){
+aggregate_features = function(y, X, sigma = NULL, tree= NULL, alpha){
 
   #center response and design matrix
   y = as.vector(y)
@@ -166,21 +164,19 @@ aggregate_features = function(y, X, sigma_constant = NULL, hc= NULL, dend = NULL
 
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
-  if(is.null(hc_list)){
-    if(is.null(hc)){
-      if(class(dend) != "dendrogram"){
-        stop("The tree needs to be an dendrogram object.")
-      }else{
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }else{
-      if(class(hc) != "hclust"){
-        stop("The tree needs to be an hclust object.")
-      }else{
-        dend = as.dendrogram(hc)
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }
+  if(class(tree) == "dendrogram"){
+    dah = dend_as_hclist(tree)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "hclust"){
+    dend = as.dendrogram(tree)
+    dah = dend_as_hclist(dend)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "list"){
+    hc_list = tree
+  }else{
+    stop("No proper tree structure is provided.")
   }
 
 
@@ -196,20 +192,20 @@ aggregate_features = function(y, X, sigma_constant = NULL, hc= NULL, dend = NULL
   Dmat <- Matrix::nearPD(Sigma_hat)$mat
 
   # If sigma unkonwn
-  if(is.null(sigma_constant)){
+  if(is.null(sigma)){
     if (!requireNamespace("scalreg", quietly = TRUE)) {
       stop("Package \"scalreg\" needed for this function to work. Please install it.",
            call. = FALSE)
     }
     object = scalreg::scalreg(X, y)
-    sigma_constant = object$hsigma
+    sigma = object$hsigma
   }
 
-  p_vals = pvalue_group_all(hc_list, X, Sigma_hat, Dmat, hbeta, sigma_constant, y, t=1)
-  result = hierarchical_test(hc_list = hc_list, p_vals= p_vals, alpha_level = alpha_level, independent = FALSE)
+  p_vals = pvalue_group_all(hc_list, X, Sigma_hat, Dmat, hbeta, sigma, y, t=1)
+  result = hierarchical_test(tree = hc_list, p_vals= p_vals, alpha = alpha, independent = FALSE)
   groups = result$groups
   rejections = result$rejections
 
-  return(list(alpha = alpha_level, groups = groups, rejections = rejections))
+  return(list(alpha = alpha, groups = groups, rejections = rejections))
 
 }

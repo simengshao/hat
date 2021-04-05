@@ -4,12 +4,10 @@
 \alias{hclist_as_dend}
 \title{Transform a hc_list object into a dendrogram}
 \usage{
-hclist_as_dend(hc_list, leaf_labels = NULL)
+hclist_as_dend(hc_list)
 }
 \arguments{
 \item{hc_list}{An object of class \code{hc_list}.}
-
-\item{leaf_labels}{A length-\code{n-leaf} of labels of leaves. If null, the leaves will be coded from 1 to \code{n-leaf}.}
 }
 \value{
 An object of class \code{dendrogram} that stores a tree structure.
@@ -21,8 +19,8 @@ This function transforms a dendrogram into a hc_list object
 \examples{
 hc <- hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
-hclist_obj = dend_as_hclist(dend)
-dend2 = hclist_as_dend(hc_list = hclist_obj$hc_list, hclist_obj$leaf_labels)
+hclist = dend_as_hclist(dend)
+dend2 = hclist_as_dend(hc_list = hclist)
 plot(dend2, center = TRUE)
 # can compare with plot(dend)
 }

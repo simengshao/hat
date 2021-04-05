@@ -1,6 +1,6 @@
 
 # This function performs the rejection step at a specific depth d.
-make_rejection = function(d, nodes, alpha_level, reshaping_func,
+make_rejection = function(d, nodes, alpha, reshaping_func,
                           p, D, Deltas, p_vals,
                           leaves, depths, degrees, degrees_rej,
                           rejections){
@@ -8,7 +8,7 @@ make_rejection = function(d, nodes, alpha_level, reshaping_func,
   # Inputs:
   # d: current depth
   # nodes: nodes at depth d that are eligible for testing
-  # alpha_level: target FSR level
+  # alpha: target FSR level
   # reshaping_func: if the thresholds need to be reshaped
   # p: number of leaves in total
   # D: max depth of non-leaf nodes
@@ -44,14 +44,14 @@ make_rejection = function(d, nodes, alpha_level, reshaping_func,
     # a) compute cutoffs across multiple r values
     harmonics_u = 1 + harmonic_diff(p -1 - (sum(degrees[nodes]) - length(nodes) -r), sum(rejections* (degrees - degrees_rej)) + r)
     if(reshaping_func == "ID"){
-      numerator = alpha_level * leaves_d * (sum(rejections* (degrees - degrees_rej)) - 1+r)
+      numerator = alpha * leaves_d * (sum(rejections* (degrees - degrees_rej)) - 1+r)
       term = p*(1-1/(Deltas)^2) * harmonics_u
       crit_func_d = 1/Deltas * numerator / (term + numerator)
       crit_func_d[which(is.na(crit_func_d))] = 1
     }else if(reshaping_func == "BY")
     {
       denoms = harmonic_diff(sum(degrees)-1, d*(delta_min-1))
-      crit_func_d =  alpha_level *leaves_d *(sum(rejections* (degrees - degrees_rej)) - 1+r)/
+      crit_func_d =  alpha *leaves_d *(sum(rejections* (degrees - degrees_rej)) - 1+r)/
         (p*(Deltas-1/Deltas) * D)/denoms
       crit_func_d[which(is.na(crit_func_d))] = 1
     }
@@ -75,12 +75,10 @@ make_rejection = function(d, nodes, alpha_level, reshaping_func,
 
 #' Test on a given tree to achieve aggregation of leaves
 #'
-#' This function sequentially tests on a tree in a top-down manner. The testing result determines aggregation of the leaves and make sure the False Split Rate is controlled under a target level.
-#' @param hc An object of class \code{hclust}.
-#' @param dend An object of class \code{dendrogram}.
-#' @param hc_list A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.
-#' @param p_vals A length-\code{num_interior_nodes} vector of p-values corresponding to interior nodes.
-#' @param alpha_level A use-specified target FSR level
+#' This function sequentially tests on a tree in a top-down manner. The testing result determines aggregation of the leaves and makes sure the False Split Rate is controlled under a target level.
+#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @param p_vals A length-\code{num_interior_nodes} vector of p-values for the interior nodes. The ordering of p-values should correspond to the ordering of nodes in the hclust/hc_list object, i.e., the ith item of the vector is the p-value of the ith node. If a dendrogram is provided that stores the tree structure, the p-values should be ordered reversely as how each node of a dendrogram is reached by a recursive algorithm (See Examples for an example using dendrogram).
+#' @param alpha A use-specified target FSR level
 #' @param independent Whether the p-values are independent (default = TRUE).
 #' @return Returns the testing result and calculated threshold values.
 #' \item{alpha}{The target FSR level.}
@@ -89,30 +87,33 @@ make_rejection = function(d, nodes, alpha_level, reshaping_func,
 #' \item{groups}{A length-\code{n-feature} vector of integers indicating the cluster to which each leaf is allocated.}
 #' @examples
 #' set.seed(123)
+#' ## Example 1: Test with an hclust object
 #' hc = hclust(dist((1:10) + runif(10)/10), method = "complete")
 #' p_vals = c(runif(5), rbeta(4, 1, 60))
-#' alpha_level = 0.3
-#' independent = TRUE
-#' hierarchical_test(hc = hc, dend = NULL, p_vals = p_vals, alpha_level = alpha_level, independent = independent)
+#' hierarchical_test(tree = hc, p_vals = p_vals, alpha = 0.3, independent = TRUE)
+#' ## Example 2: Test with a dendrogram object
+#' dend = as.dendrogram(hc)
+#' p_vals = c(runif(4), rbeta(1, 1, 60), runif(1), rbeta(3, 1, 60))
+#' hierarchical_test(tree = dend, p_vals = p_vals, alpha = 0.3, independent = TRUE)
+#' ## Example 3: Test with a hc_list object
+#' hc_list = dend_as_hclist(dend)
+#' p_vals = c(runif(4), rbeta(1, 1, 60), runif(1), rbeta(3, 1, 60))
+#' hierarchical_test(tree = hc_list, p_vals = p_vals, alpha = 0.3, independent = TRUE)
 #' @export
-hierarchical_test = function(hc = NULL, dend = NULL, hc_list = NULL, p_vals, alpha_level, independent = TRUE){
+hierarchical_test = function(tree = NULL, p_vals, alpha, independent = TRUE){
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
-  if(is.null(hc_list)){
-    if(is.null(hc)){
-      if(class(dend) != "dendrogram"){
-        stop("The tree needs to be an dendrogram object.")
-      }else{
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }else{
-      if(class(hc) != "hclust"){
-        stop("The tree needs to be an hclust object.")
-      }else{
-        dend = as.dendrogram(hc)
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }
+  if(class(tree) == "dendrogram"){
+    dah = dend_as_hclist(tree)
+    hc_list = dah
+  }else if(class(tree) == "hclust"){
+    dend = as.dendrogram(tree)
+    dah = dend_as_hclist(dend)
+    hc_list = dah
+  }else if(class(tree) == "list"){
+    hc_list = tree
+  }else{
+    stop("No proper tree structure is provided.")
   }
 
 
@@ -123,7 +124,7 @@ hierarchical_test = function(hc = NULL, dend = NULL, hc_list = NULL, p_vals, alp
 
   # Initialize rejections (the output of the algorithm.)
   rejections = rep(FALSE, m)
-  threshold_functions = c(rep(NA, m), 1)
+  threshold_functions = c(rep(NA, m-1), 1)
 
   # Find depth of each node (root has depth 1).
   depths = find_depths_in_list(hc_list)
@@ -169,7 +170,7 @@ hierarchical_test = function(hc = NULL, dend = NULL, hc_list = NULL, p_vals, alp
 
         # Performs the rejection step at depth d.
         if(length(nodes_to_test_depth_d)>0){
-          ifrejected = make_rejection(d, nodes_to_test_depth_d, alpha_level, reshaping_func,
+          ifrejected = make_rejection(d, nodes_to_test_depth_d, alpha, reshaping_func,
                                       p, D=max_depth-1, Deltas, p_vals,
                                       leaves, depths, degrees, degrees_rej,
                                       rejections)
@@ -203,7 +204,7 @@ hierarchical_test = function(hc = NULL, dend = NULL, hc_list = NULL, p_vals, alp
   }
   rejections = rejections[-(1:p)]
   groups = determine_aggregation(hc_list, rejections)
-  return(list(alpha = alpha_level,
+  return(list(alpha = alpha,
               rejections = rejections,
               threshold_functions = threshold_functions[-(1:p)],
               groups = groups))

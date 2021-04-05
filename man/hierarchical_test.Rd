@@ -4,25 +4,14 @@
 \alias{hierarchical_test}
 \title{Test on a given tree to achieve aggregation of leaves}
 \usage{
-hierarchical_test(
-  hc = NULL,
-  dend = NULL,
-  hc_list = NULL,
-  p_vals,
-  alpha_level,
-  independent = TRUE
-)
+hierarchical_test(tree = NULL, p_vals, alpha, independent = TRUE)
 }
 \arguments{
-\item{hc}{An object of class \code{hclust}.}
+\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.}
 
-\item{dend}{An object of class \code{dendrogram}.}
+\item{p_vals}{A length-\code{num_interior_nodes} vector of p-values for the interior nodes. The ordering of p-values should correspond to the ordering of nodes in the hclust/hc_list object, i.e., the ith item of the vector is the p-value of the ith node. If a dendrogram is provided that stores the tree structure, the p-values should be ordered reversely as how each node of a dendrogram is reached by a recursive algorithm (See Examples for an example using dendrogram).}
 
-\item{hc_list}{A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.}
-
-\item{p_vals}{A length-\code{num_interior_nodes} vector of p-values corresponding to interior nodes.}
-
-\item{alpha_level}{A use-specified target FSR level}
+\item{alpha}{A use-specified target FSR level}
 
 \item{independent}{Whether the p-values are independent (default = TRUE).}
 }
@@ -34,13 +23,20 @@ Returns the testing result and calculated threshold values.
 \item{groups}{A length-\code{n-feature} vector of integers indicating the cluster to which each leaf is allocated.}
 }
 \description{
-This function sequentially tests on a tree in a top-down manner. The testing result determines aggregation of the leaves and make sure the False Split Rate is controlled under a target level.
+This function sequentially tests on a tree in a top-down manner. The testing result determines aggregation of the leaves and makes sure the False Split Rate is controlled under a target level.
 }
 \examples{
 set.seed(123)
+## Example 1: Test with an hclust object
 hc = hclust(dist((1:10) + runif(10)/10), method = "complete")
 p_vals = c(runif(5), rbeta(4, 1, 60))
-alpha_level = 0.3
-independent = TRUE
-hierarchical_test(hc = hc, dend = NULL, p_vals = p_vals, alpha_level = alpha_level, independent = independent)
+hierarchical_test(tree = hc, p_vals = p_vals, alpha = 0.3, independent = TRUE)
+## Example 2: Test with a dendrogram object
+dend = as.dendrogram(hc)
+p_vals = c(runif(4), rbeta(1, 1, 60), runif(1), rbeta(3, 1, 60))
+hierarchical_test(tree = dend, p_vals = p_vals, alpha = 0.3, independent = TRUE)
+## Example 3: Test with a hc_list object
+hc_list = dend_as_hclist(dend)
+p_vals = c(runif(4), rbeta(1, 1, 60), runif(1), rbeta(3, 1, 60))
+hierarchical_test(tree = hc_list, p_vals = p_vals, alpha = 0.3, independent = TRUE)
 }

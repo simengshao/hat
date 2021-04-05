@@ -12,7 +12,6 @@ dend_as_hclist(dend)
 \value{
 A list object of length-\code{num_interior_nodes}. The \code{i}-th item in the list contains the child nodes of the \code{i}-th node in the tree. The negative values in the list indicate leaf nodes, and positive values indicate interior node. The interior nodes are numbered reversely from the root along the branch, i.e., the number corresponding to a node is always smaller than the number corresponding to its parent.
 \item{hc_list}{The list object that represents the tree structure,}
-\item{leaf_labels}{A length-\code{n-leaf} of labels of leaves stored in the \code{dendrogram}.}
 }
 \description{
 This function transforms a dendrogram into a hc_list object
@@ -22,7 +21,7 @@ hc <- hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 dah = dend_as_hclist(dend)
 ## check length of the list
-length(dah$hc_list)
+length(dah)
 ## leaf labels
-dah$leaf_labels
+attr(dah, "leaf_labels")
 }

@@ -4,27 +4,16 @@
 \alias{aggregate_observations}
 \title{Aggregate observations hierarchically with False Split Rate control}
 \usage{
-aggregate_observations(
-  y,
-  sigma_constant = NULL,
-  hc = NULL,
-  dend = NULL,
-  hc_list = NULL,
-  alpha_level
-)
+aggregate_observations(y, sigma = NULL, tree = NULL, alpha)
 }
 \arguments{
 \item{y}{A length-\code{n-observation} vector of observations}
 
-\item{sigma_constant}{Standard deviation of noise.}
+\item{sigma}{Standard deviation of noise. If given, the algorithm will compute nodewise p-values with chi-squared statistics. If sigma is unkown, the algorithm will compute p-values with F-test statistics.}
 
-\item{hc}{An object of class \code{hclust}.}
+\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.}
 
-\item{dend}{An object of class \code{dendrogram}.}
-
-\item{hc_list}{A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.}
-
-\item{alpha_level}{A use-specified target FSR level}
+\item{alpha}{A use-specified target FSR level}
 }
 \value{
 Returns the aggregation result.
@@ -37,5 +26,11 @@ This function aggregate observations with the same means while simultaneously co
 The aggregation is achieved by two steps: (1) Generate p-values for each interior node through ANOVA test (2) Sequentially test on the tree.
 }
 \examples{
-## See data example.
+set.seed(123)
+hc = hclust(dist((1:20) + runif(20)/20), method = "complete")
+k = 4 # 4 true groups
+groups = cutree(hc, k = 4)
+theta = runif(k, 0, 10)[groups]
+y = theta + runif(20, 0, 1)
+aggregate_observations(y, sigma = 1, tree= hc, alpha = 0.1)
 }

@@ -1,7 +1,7 @@
-pvalue_anova_all = function(y, hc_list, sigma_constant = NULL, simes = TRUE){
+pvalue_anova_all = function(y, hc_list, sigma = NULL, simes = TRUE){
   # y: vector of observed value
   # hc_list: list length of $T\L$ for storing tree structure
-  # sigma_constant: standard deviation of noise
+  # sigma: standard deviation of noise
 
   n_interiornodes = length(hc_list)
   ps = rep(0, n_interiornodes)
@@ -25,7 +25,7 @@ pvalue_anova_all = function(y, hc_list, sigma_constant = NULL, simes = TRUE){
     y_bar = sum(y_i_bar*n_i)/sum(n_i)
 
     sigma_est = sd(y)
-    if(is.null(sigma_constant)){
+    if(is.null(sigma)){
 
       # calculate the F-statistic
       sb_2 = sum(n_i * (y_i_bar - y_bar)^2)/(n_deg-1)
@@ -39,7 +39,7 @@ pvalue_anova_all = function(y, hc_list, sigma_constant = NULL, simes = TRUE){
     }else{
       # calculate the chi-statistic and p-value
       sb_2 = sum(n_i * (y_i_bar - y_bar)^2)/(n_deg-1)
-      p_value = stats::pchisq(sb_2/sigma_constant^2, df= n_deg-1 , lower.tail=FALSE)
+      p_value = stats::pchisq(sb_2/sigma^2, df= n_deg-1 , lower.tail=FALSE)
     }
     ps[i] = p_value
   }
@@ -62,43 +62,46 @@ pvalue_anova_all = function(y, hc_list, sigma_constant = NULL, simes = TRUE){
 #' This function aggregate observations with the same means while simultaneously controlling False Split Rate under a target level.
 #' The aggregation is achieved by two steps: (1) Generate p-values for each interior node through ANOVA test (2) Sequentially test on the tree.
 #' @param y A length-\code{n-observation} vector of observations
-#' @param sigma_constant Standard deviation of noise.
-#' @param hc An object of class \code{hclust}.
-#' @param dend An object of class \code{dendrogram}.
-#' @param hc_list A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.
-#' @param alpha_level A use-specified target FSR level
+#' @param sigma Standard deviation of noise. If given, the algorithm will compute nodewise p-values with chi-squared statistics. If sigma is unkown, the algorithm will compute p-values with F-test statistics.
+#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @param alpha A use-specified target FSR level
 #' @return Returns the aggregation result.
 #' \item{alpha}{The target FSR level.}
 #' \item{groups}{A length-\code{n-observation} vector of integers indicating the cluster to which each observation is allocated.}
 #' \item{rejections}{A length-(\code{num_interior_nodes}) vector indicating whether each node is rejected.}
 #' @examples
-#' ## See data example.
+#' set.seed(123)
+#' hc = hclust(dist((1:20) + runif(20)/20), method = "complete")
+#' k = 4 # 4 true groups
+#' groups = cutree(hc, k = 4)
+#' theta = runif(k, 0, 10)[groups]
+#' y = theta + runif(20, 0, 1)
+#' aggregate_observations(y, sigma = 1, tree= hc, alpha = 0.1)
 #' @importFrom stats pchisq pf
 #' @export
-aggregate_observations = function(y, sigma_constant = NULL, hc= NULL, dend = NULL, hc_list = NULL, alpha_level){
-  if(is.null(hc_list)){
+aggregate_observations = function(y, sigma = NULL, tree= NULL, alpha){
+
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
-    if(is.null(hc)){
-      if(class(dend) != "dendrogram"){
-        stop("The tree needs to be an dendrogram object.")
-      }else{
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }else{
-     if(class(hc) != "hclust"){
-        stop("The tree needs to be an hclust object.")
-      }else{
-        dend = stats::as.dendrogram(hc)
-        hc_list = dend_as_hclist(dend)$hc_list
-      }
-    }
+  if(class(tree) == "dendrogram"){
+    dah = dend_as_hclist(tree)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "hclust"){
+    dend = as.dendrogram(tree)
+    dah = dend_as_hclist(dend)
+    hc_list = dah
+    labels = attr(dah, "leaf_labels")
+  }else if(class(tree) == "list"){
+    hc_list = tree
+  }else{
+    stop("No proper tree structure is provided.")
   }
 
-  p_vals = pvalue_anova_all(y, hc_list, sigma_constant, simes = TRUE)
+  p_vals = pvalue_anova_all(y, hc_list, sigma, simes = TRUE)
 
-  result = hierarchical_test(hc_list = hc_list, p_vals = p_vals, alpha_level = alpha_level, independent = FALSE)
+  result = hierarchical_test(tree = hc_list, p_vals = p_vals, alpha = alpha, independent = FALSE)
   groups = result$groups
   rejections = result$rejections
-  return(list(alpha = alpha_level, groups = groups, rejections = rejections))
+  return(list(alpha = alpha, groups = groups, rejections = rejections))
 
 }

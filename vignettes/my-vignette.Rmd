@@ -53,7 +53,7 @@ The `stocks_volatility` data set contains `r nrow(stocks_volatility)` stocks' co
 
 The distribution of volatility is right-skewed. Therefore, in our analysis, we will take the logarithm to reduce skew.
 
-The tree structure is saved in `stocks_tree`, which is formed according to the NAICS hierarchy. We can look at the tree structure by using the function `plot_hc_list()`. However, we omit this for now because we will see the tree again very soon.
+The tree structure is saved in `stocks_tree`, which is formed according to the NAICS hierarchy. We can look at the tree structure by using the function `plot_tree()`. However, we omit this for now because we will see the tree again very soon.
 
 ### Aggregating observations
 
@@ -75,23 +75,23 @@ The function `aggregate_observations` performs both of these steps:
 
 ```{r, eval=T, include=T}
 result = aggregate_observations(y = log(stocks_volatility$volatility), 
-                       sigma_constant = NULL, 
-                       hc_list = stocks_tree, 
-                       alpha_level = 0.4)
+                       sigma = NULL, 
+                       tree = stocks_tree, 
+                       alpha = 0.4)
 ```
 
-* `sigma_constant`: standard deviation of noise $\epsilon$'s, if known.  If `sigma_constant` is non-`NULL`, then a chi-squared null distribution is used; if `sigma_constant` is `NULL`, then an F-test is performed.
+* `sigma`: standard deviation of noise $\epsilon$'s, if known.  If `sigma` is non-`NULL`, then a chi-squared null distribution is used; if `sigma` is `NULL`, then an F-test is performed.
 
-* `hc_list`: a list of length-$|\mathcal{T}\setminus \mathcal{L}|$ that describes the tree structure. This format is a generalization of the `merge` matrix within an `hclust` object.  The element `hc_list[[i]]` contains the children of the $i$-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. For example, if `hc_list[[i]][j]` is positive, that means that node `hc_list[[i]]` is a parent of  node `hc_list[[j]]`.  The object `stocks_tree` in our package is an example of such a structure. The function can also work with `hclust` objects (for binary trees) or `dendrogram` objects (for more general trees).  Only one of the three is required.  The functions `dend_as_hclist` and `hclist_as_dend` allow one to switch between formats.
+* `tree`: a list of length-$|\mathcal{T}\setminus \mathcal{L}|$ that describes the tree structure. This format is a generalization of the `merge` matrix within an `hclust` object.  The element `hc_list[[i]]` contains the children of the $i$-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. For example, if `hc_list[[i]][j]` is positive, that means that node `hc_list[[i]]` is a parent of  node `hc_list[[j]]`.  The object `stocks_tree` in our package is an example of such a structure. The function can also work with `hclust` objects (for binary trees) or `dendrogram` objects (for more general trees). The functions `dend_as_hclist` and `hclist_as_dend` allow one to switch between formats.
 
-* `alpha_level`: target FSR level.
+* `alpha`: target FSR level.
 
 The output `result` is a list that has three components: `alpha` is the target FSR level, `groups` gives the group assignments of the observations, and `rejections` indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree).
 
 In this example, the achieved aggregation result contains `r length(unique(result$groups))` groups. We plot the achieved aggregation on the tree using the function `plot_aggregation` (a bit busy as since are >2k stocks...).
 
 ```{r, fig.height=4, fig.width=7, eval=T, include=T}
-plot_aggregation(rejections = result$rejections, hc_list = stocks_tree)
+plot_aggregation(rejections = result$rejections, tree = stocks_tree)
 ```
 
 
@@ -122,13 +122,13 @@ To perform aggregation, we can use the function `aggregate_features`. The input 
 
 - `X`: design matrix.
 
-- `hc`: an object that describes the tree structure. Since here we have a binary tree, we use a `hc = hclust` object. Alternatively, one can also use `dend = dendrogram` or `hc_list = hc_list` if they have a non-binary tree that is saved in the format of 'dendrogram' or 'hc_list'.
+- `hc`: an object that describes the tree structure. Since here we have a binary tree, we use a `tree = hclust` object. Alternatively, one can also use `tree = dendrogram` or `tree = hc_list` if they have a non-binary tree that is saved in the format of 'dendrogram' or 'hc_list'.
 
-- `alpha_level`: target FSR level.
+- `alpha`: target FSR level.
 
 ```{r, eval=T, include=T}
 agg_result = aggregate_features(y = y, X = X,
-                          hc = hc, alpha_level = 0.2)
+                          tree = hc, alpha = 0.2)
 ```
 
 For calculating FSP we can use 
@@ -154,21 +154,21 @@ hc <- hclust(dist(runif(n)))
 de <- as.dendrogram(hc)
 hc_list <- dend_as_hclist(de)
 
-# compute_my_pvalue <- function(u) {
-#   # Example of a customized pvalue function:
-#   # u an element of hc_list
-#   
-#   # compute something more interesting than just runif here.
-#   
-#   # hc_list[[u]]
-# }
-# 
-# result_small <- hierarchical_test(hc_list = hc_list, 
-#                   p_vals = lapply(hc_list, compute_my_pvalue),
-#                   alpha_level = 0.4, 
-#                   independent = FALSE)
-# 
-# plot_aggregation(rejections = result_small$rejections, hc_list = hc_list)
+compute_my_pvalue <- function(u) {
+  # Example of a customized pvalue function:
+  # u an element of hc_list
+
+  # compute something more interesting than just runif here.
+  # If has leaf as a child, not reject; otherwise reject.
+  ifelse(any(hc_list[[u]]<0), 1, 0)
+}
+
+result_small <- hierarchical_test(tree = hc_list,
+                  p_vals = sapply(1:length(hc_list), compute_my_pvalue),
+                  alpha = 0.4,
+                  independent = FALSE)
+
+plot_aggregation(rejections = result_small$rejections, tree = hc_list)
 ```
 
 

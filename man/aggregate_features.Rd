@@ -4,30 +4,18 @@
 \alias{aggregate_features}
 \title{Aggregate rare features hierarchically with False Split Rate control}
 \usage{
-aggregate_features(
-  y,
-  X,
-  sigma_constant = NULL,
-  hc = NULL,
-  dend = NULL,
-  hc_list = NULL,
-  alpha_level
-)
+aggregate_features(y, X, sigma = NULL, tree = NULL, alpha)
 }
 \arguments{
 \item{y}{A length-\code{n-observation} response vector that guides the aggregation}
 
 \item{X}{An \code{n-observation}-by-\code{n-feature} design matrix. Each row corresponds to a subject and each column stores the observation of a feature made by subjects.}
 
-\item{sigma_constant}{Standard deviation of noise.}
+\item{sigma}{Standard deviation of noise. If not given, the algorithm will estimate sigma.}
 
-\item{hc}{An object of class \code{hclust}.}
+\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.}
 
-\item{dend}{An object of class \code{dendrogram}.}
-
-\item{hc_list}{A list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes. When \code{hc_list} is \code{NULL}, function will learn it from \code{hc} or \code{dend}.}
-
-\item{alpha_level}{A use-specified target FSR level}
+\item{alpha}{A use-specified target FSR level}
 }
 \value{
 Returns the aggregation result.
@@ -40,5 +28,5 @@ This function achieves rare features aggregation while simultaneously controllin
 The aggregation is achieved by two steps: (1) Generate p-values for each interior node (2) Sequentially test on the tree.
 }
 \examples{
-## See vignette for data example.
+## See vignette for a small data example.
 }

@@ -4,15 +4,14 @@
 #' @param dend An object of class \code{dendrogram}.
 #' @return A list object of length-\code{num_interior_nodes}. The \code{i}-th item in the list contains the child nodes of the \code{i}-th node in the tree. The negative values in the list indicate leaf nodes, and positive values indicate interior node. The interior nodes are numbered reversely from the root along the branch, i.e., the number corresponding to a node is always smaller than the number corresponding to its parent.
 #' \item{hc_list}{The list object that represents the tree structure,}
-#' \item{leaf_labels}{A length-\code{n-leaf} of labels of leaves stored in the \code{dendrogram}.}
 #' @examples
 #' hc <- hclust(dist(USArrests), "ave")
 #' dend = as.dendrogram(hc)
 #' dah = dend_as_hclist(dend)
 #' ## check length of the list
-#' length(dah$hc_list)
+#' length(dah)
 #' ## leaf labels
-#' dah$leaf_labels
+#' attr(dah, "leaf_labels")
 #' @importFrom stats dendrapply as.dendrogram na.omit
 #' @export
 dend_as_hclist = function(dend){
@@ -20,7 +19,6 @@ dend_as_hclist = function(dend){
   m = dendextend::nnodes(dend)
   leaf_labels = dendextend::get_leaves_attr(dend, "label")
   not_labeled = is.null(attr(dend, "label"))
-  #not_labeled = TRUE
   if(not_labeled)
   {
     dend = dendextend::assign_values_to_nodes_nodePar(dend, seq(1:m))
@@ -64,12 +62,7 @@ dend_as_hclist = function(dend){
     recoding = data.frame(rbind(non_leaf_recoding, leaf_recoding))
     hc_list = rev(lapply(hc_list, function(x) {recoding$new[match(x, recoding$org)]}))
   }else{
-    #hc_list = rev(hc_list)
     node_in_order = as.numeric(na.omit(dendextend::get_nodes_attr(dend, "label", include_leaves = FALSE)))
-    #non_leaf_recoding = data.frame(org = node_in_order, new = node_in_order)
-    #leaf_recoding = data.frame(org = leaf_labels, new = -(1:p))
-    #recoding = rbind(non_leaf_recoding, leaf_recoding)
-    #hc_list = lapply(hc_list, function(x) {recoding$new[match(x, recoding$org)]})
     hc_list_new = hc_list
     for(i in length(hc_list):1){
       hc_list_new[[node_in_order[i]]] = hc_list[[i]]
@@ -77,5 +70,6 @@ dend_as_hclist = function(dend){
     hc_list = hc_list_new
   }
 
-  return(list(hc_list = hc_list, leaf_labels = leaf_labels))
+  attr(hc_list, "leaf_labels") = leaf_labels
+  return(hc_list)
 }
