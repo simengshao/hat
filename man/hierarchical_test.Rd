@@ -7,7 +7,11 @@
 hierarchical_test(tree = NULL, p_vals, alpha, independent = TRUE)
 }
 \arguments{
-\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.}
+\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that
+stores the tree structure. An hc_list object is a list of
+length-\code{num_interior_nodes} where the ith item in the list contains
+the child nodes of the ith node in the tree. The negative values in the
+list indicate leaf nodes.}
 
 \item{p_vals}{A length-\code{num_interior_nodes} vector of p-values for the interior nodes. The ordering of p-values should correspond to the ordering of nodes in the hclust/hc_list object, i.e., the ith item of the vector is the p-value of the ith node. If a dendrogram is provided that stores the tree structure, the p-values should be ordered reversely as how each node of a dendrogram is reached by a recursive algorithm (See Examples for an example using dendrogram).}
 
