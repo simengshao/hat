@@ -145,7 +145,7 @@ pvalue_group_all = function(hc_list, X, Sigma_hat, Dmat=NULL, hbeta, hsigma, y, 
 #' @param y A length-\code{n-observation} response vector that guides the aggregation
 #' @param X An \code{n-observation}-by-\code{n-feature} design matrix. Each row corresponds to a subject and each column stores the observation of a feature made by subjects.
 #' @param sigma Standard deviation of noise. If not given, the algorithm will estimate sigma.
-#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @template tree-template
 #' @param alpha A use-specified target FSR level
 #' @return Returns the aggregation result.
 #' \item{alpha}{The target FSR level.}

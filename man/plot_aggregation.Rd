@@ -13,30 +13,33 @@ plot_aggregation(rejections, iflabel = FALSE, labels = NULL, tree = NULL)
 
 \item{labels}{A vector of length-\code{n-leaf} of labels corresponding to each leaf.}
 
-\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
-\subsection{Example 1: Plot an hc object}{
-
-hc = hclust(dist(USArrests), "ave")
-labels = rownames(USArrests)\link{hc$order}
-plot_aggregation(rejections = c(rep(FALSE, 45), iflabel = TRUE, rep(TRUE, 4)), hc = hc)
+\item{tree}{An object encoding the tree structure.  Can be one of three
+formats: (1) an \code{hclust} object (if tree is binary), (2) a \code{dendrogram}, or
+(3) a generalization of an hclust object to the case of non-binary trees,
+which we call an hc_list object. An hc_list object is a list of
+length-\code{num_interior_nodes} where the ith item in the list contains
+the child nodes of the ith node in the tree. The negative values in the
+list indicate leaf nodes.}
 }
+\description{
+This function plots a tree structure with branches and leaves colored by group memberships. The tree structure can be represented by a variety of object formats: \code{dendrogram}, \code{hclust} or a a list (\code{hc_list}). The aggregation is determined by a vector corresponding to each interior nodes
+}
+\examples{
+## Example 1: Plot an hc object
+hc = hclust(dist(USArrests), "ave")
+labels = rownames(USArrests)[hc$order]
+plot_aggregation(rejections = c(rep(FALSE, 45), iflabel = TRUE, rep(TRUE, 4)), hc = hc)
 
-\subsection{Example 2: Plot a dendrogram object}{
 
+## Example 2: Plot a dendrogram object
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, dend = dend)
-}
 
-\subsection{Example 3: Plot a hc_list object}{
-
+## Example 3: Plot a hc_list object
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 dah = dend_as_hclist(dend)
 labels = attr(dend, "leaf_labels")
 plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, hc_list = dah)
-}}
-}
-\description{
-This function plots a tree structure with branches and leaves colored by group memberships. The tree structure can be represented by a variety of object formats: \code{dendrogram}, \code{hclust} or a a list (\code{hc_list}). The aggregation is determined by a vector corresponding to each interior nodes
 }
