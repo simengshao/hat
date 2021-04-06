@@ -11,8 +11,10 @@ aggregate_observations(y, sigma = NULL, tree = NULL, alpha)
 
 \item{sigma}{Standard deviation of noise. If given, the algorithm will compute nodewise p-values with chi-squared statistics. If sigma is unkown, the algorithm will compute p-values with F-test statistics.}
 
-\item{tree}{An hclust (if binary tree), or dendrogram, or hc_list object that
-stores the tree structure. An hc_list object is a list of
+\item{tree}{An object encoding the tree structure.  Can be one of three
+formats: (1) an \code{hclust} object (if tree is binary), (2) a \code{dendrogram}, or
+(3) a generalization of an hclust object to the case of non-binary trees,
+which we call an hc_list object. An hc_list object is a list of
 length-\code{num_interior_nodes} where the ith item in the list contains
 the child nodes of the ith node in the tree. The negative values in the
 list indicate leaf nodes.}
