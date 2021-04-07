@@ -1,7 +1,7 @@
 #' Visualize the Tree Structure
 #'
 #' This function plots a tree structure. The tree structure can be represented by a variety of object formats: \code{dendrogram}, \code{hclust} or a list (\code{hc_list}).
-#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @template tree-template
 #' @param iflabel A boolean variable indicating whether leaves should be labeled.
 #' @param labels A vector of length-\code{n-leaf} of labels corresponding to each leaf.
 #' @examples
@@ -104,7 +104,8 @@ plot_tree = function(tree = NULL, iflabel = FALSE, labels = NULL){
 #' @param rejections A vector of length-\code{num_interior_nodes} indicating if each node is rejected. When coloring with true aggregation, this vector indicate whether each interior node is a non-null node.
 #' @param iflabel A boolean variable indicating whether leaves should be labeled.
 #' @param labels A vector of length-\code{n-leaf} of labels corresponding to each leaf.
-#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @template tree-template
+#' @examples
 #' ## Example 1: Plot an hc object
 #' hc = hclust(dist(USArrests), "ave")
 #' labels = rownames(USArrests)[hc$order]

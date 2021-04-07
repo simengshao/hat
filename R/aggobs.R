@@ -63,7 +63,7 @@ pvalue_anova_all = function(y, hc_list, sigma = NULL, simes = TRUE){
 #' The aggregation is achieved by two steps: (1) Generate p-values for each interior node through ANOVA test (2) Sequentially test on the tree.
 #' @param y A length-\code{n-observation} vector of observations
 #' @param sigma Standard deviation of noise. If given, the algorithm will compute nodewise p-values with chi-squared statistics. If sigma is unkown, the algorithm will compute p-values with F-test statistics.
-#' @param tree An hclust (if binary tree), or dendrogram, or hc_list object that stores the tree structure. An hc_list object is a list of length-\code{num_interior_nodes} where the ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes.
+#' @template tree-template
 #' @param alpha A use-specified target FSR level
 #' @return Returns the aggregation result.
 #' \item{alpha}{The target FSR level.}
