@@ -22,7 +22,8 @@ Suggests:
     CVXR (>= 1.0-1),
     RColorBrewer (>= 1.1-2),
     rmarkdown,
-    testthat (>= 2.0.0)
+    testthat (>= 2.0.0),
+    MASS (>= 7.3-51.4)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

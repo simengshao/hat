@@ -27,18 +27,14 @@ This function plots a tree structure with branches and leaves colored by group m
 \examples{
 ## Example 1: Plot an hc object
 hc = hclust(dist(USArrests), "ave")
-labels = rownames(USArrests)\link{hc$order}
+labels = rownames(USArrests)[hc$order]
 plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = hc)
-}
 
 
 ## Example 2: Plot a dendrogram object
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = dend)
-}
-
-\subsection{Example 3: Plot a hc_list object}{
 
 ## Example 3: Plot a hc_list object
 hc = hclust(dist(USArrests), "ave")
@@ -46,8 +42,4 @@ dend = as.dendrogram(hc)
 dah = dend_as_hclist(dend)
 labels = attr(dah, "leaf_labels")
 plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, tree = dah)
-}}
-}
-\description{
-This function plots a tree structure with branches and leaves colored by group memberships. The tree structure can be represented by a variety of object formats: \code{dendrogram}, \code{hclust} or a a list (\code{hc_list}). The aggregation is determined by a vector corresponding to each interior nodes
 }

@@ -14,3 +14,8 @@
 "stocks_tree"
 
 
+#' Hierarchical tree based on neighborhoods in NYC
+#'
+#' A list of length-\code{190} that stores the tree structure (referred to as \code{hc_list} format in the package) for the 194 neighborhoods in New York city. The ith item in the list contains the child nodes of the ith node in the tree. The negative values in the list indicate leaf nodes and the positive values correspond to interior nodes.
+#' The tree structure is formed based on Neighborhood Tabulation Areas (NTAs).
+"taxi_tree"
