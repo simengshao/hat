@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "simengsh@marshall.usc.edu")
 Description: This package achieves aggregation based on a tree while controling False Split Rate under a pre-specified level, as described in the paper "Controlling the False Split Rate in Tree-Based Aggregation". This package includes a function that performs the hierarchical testing procedure, as well as two functions that achieve aggregation in the two main applications: (a) Aggregate observations with the same means. (b) Aggregate features with the same coefficients in linear regression.
-Depends: R (>= 3.6.2)
+Depends: R (>= 3.6.0)
 Imports: 
     dendextend (>= 1.14.0),
     glmnet (>= 4.0-2),

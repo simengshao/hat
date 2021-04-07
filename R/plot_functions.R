@@ -108,20 +108,20 @@ plot_tree = function(tree = NULL, iflabel = FALSE, labels = NULL){
 #' ## Example 1: Plot an hc object
 #' hc = hclust(dist(USArrests), "ave")
 #' labels = rownames(USArrests)[hc$order]
-#' plot_aggregation(rejections = c(rep(FALSE, 45), iflabel = TRUE, rep(TRUE, 4)), hc = hc)
+#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = hc)
 #'
 #'
 #' ## Example 2: Plot a dendrogram object
 #' hc = hclust(dist(USArrests), "ave")
 #' dend = as.dendrogram(hc)
-#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, dend = dend)
+#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = dend)
 #'
 #' ## Example 3: Plot a hc_list object
 #' hc = hclust(dist(USArrests), "ave")
 #' dend = as.dendrogram(hc)
 #' dah = dend_as_hclist(dend)
-#' labels = attr(dend, "leaf_labels")
-#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, hc_list = dah)
+#' labels = attr(dah, "leaf_labels")
+#' plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, tree = dah)
 #' @importFrom graphics par plot segments text
 #' @importFrom stats is.leaf runif
 #' @export

@@ -18,14 +18,14 @@ plot_aggregation(rejections, iflabel = FALSE, labels = NULL, tree = NULL)
 
 hc = hclust(dist(USArrests), "ave")
 labels = rownames(USArrests)\link{hc$order}
-plot_aggregation(rejections = c(rep(FALSE, 45), iflabel = TRUE, rep(TRUE, 4)), hc = hc)
+plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = hc)
 }
 
 \subsection{Example 2: Plot a dendrogram object}{
 
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
-plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, dend = dend)
+plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, tree = dend)
 }
 
 \subsection{Example 3: Plot a hc_list object}{
@@ -33,8 +33,8 @@ plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, d
 hc = hclust(dist(USArrests), "ave")
 dend = as.dendrogram(hc)
 dah = dend_as_hclist(dend)
-labels = attr(dend, "leaf_labels")
-plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, hc_list = dah)
+labels = attr(dah, "leaf_labels")
+plot_aggregation(rejections = c(rep(FALSE, 45), rep(TRUE, 4)), iflabel = TRUE, labels = labels, tree = dah)
 }}
 }
 \description{
