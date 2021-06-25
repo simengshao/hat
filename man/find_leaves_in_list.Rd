@@ -15,8 +15,7 @@ find_leaves_in_list(ind, hc_list)
 Returns the leaf indices.
 }
 \description{
-This function aggregate observations with the same means while simultaneously controlling False Split Rate under a target level.
-The aggregation is achieved by two steps: (1) Generate p-values for each interior node through ANOVA test (2) Sequentially test on the tree.
+This function finds all leaves that are descendants of a node in a tree (represented by an \code{hc_list} object).
 }
 \examples{
 ## See data example.

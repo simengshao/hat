@@ -2,8 +2,8 @@
 # This function performs the rejection step at a specific depth d.
 make_rejection = function(d, nodes, alpha, reshaping_func,
                           p, D, Deltas, p_vals,
-                          leaves, depths, degrees, degrees_rej,
-                          rejections){
+                          leaves, depths, degrees,
+                          rejections, R_to_d_minus_1){
 
   # Inputs:
   # d: current depth
@@ -16,8 +16,8 @@ make_rejection = function(d, nodes, alpha, reshaping_func,
   # p_vals: vector of p-values
   # leaves: vector of number of leaves in the subtree rooted at each node
   # degrees: degree of each node on T
-  # degree_rej: degree of each node on T_rej
   # rejections: vector that encodes current rejection status
+  # R_to_d_minus_1: R^{1:(d-1)} defined in equation 14
 
 
   # Outputs:
@@ -39,27 +39,29 @@ make_rejection = function(d, nodes, alpha, reshaping_func,
 
   possible_r = rev(1:((sum(degrees[nodes]) - length(nodes))))
 
+
   for(r in possible_r)
   {
     # a) compute cutoffs across multiple r values
-    harmonics_u = 1 + harmonic_diff(p -1 - (sum(degrees[nodes]) - length(nodes) -r), sum(rejections* (degrees - degrees_rej)) + r)
+    harmonics_u = 1 + harmonic_diff(p -1 - (sum(degrees[nodes]) - length(nodes) -r), R_to_d_minus_1 + r)
     if(reshaping_func == "ID"){
-      numerator = alpha * leaves_d * (sum(rejections* (degrees - degrees_rej)) - 1+r)
+      numerator = alpha * leaves_d * (R_to_d_minus_1 + r)
       term = p*(1-1/(Deltas)^2) * harmonics_u
       crit_func_d = 1/Deltas * numerator / (term + numerator)
       crit_func_d[which(is.na(crit_func_d))] = 1
     }else if(reshaping_func == "BY")
     {
       denoms = harmonic_diff(sum(degrees)-1, d*(delta_min-1))
-      crit_func_d =  alpha *leaves_d *(sum(rejections* (degrees - degrees_rej)) - 1+r)/
+      crit_func_d =  alpha *leaves_d *(R_to_d_minus_1 - 1+r)/
         (p*(Deltas-1/Deltas) * D)/denoms
       crit_func_d[which(is.na(crit_func_d))] = 1
     }
 
     # b) decide r and who gets rejected
-    if(r<=sum(as.numeric(p_vals_d <= crit_func_d) ))
+    if(r<=sum((p_vals_d <= crit_func_d)*(degrees[nodes]-1)))
     {
       rejected_d = (p_vals_d <= crit_func_d)
+      R_to_d_minus_1 = R_to_d_minus_1 + r
       print(paste0("The rejected nodes in level ", d,
                    " are ", nodes[rejected_d]))
       print(paste0("The critical function at nodes in level ", d,
@@ -68,7 +70,7 @@ make_rejection = function(d, nodes, alpha, reshaping_func,
     }
 
   }
-  return(list(rejected_d = rejected_d, crit_func_d = crit_func_d))
+  return(list(rejected_d = rejected_d, crit_func_d = crit_func_d, R_to_d_minus_1 = R_to_d_minus_1))
 
 }
 
@@ -152,8 +154,10 @@ hierarchical_test = function(tree = NULL, p_vals, alpha, independent = TRUE){
 
     if(d == 1)
     {
-      rejections[nodes_depth_d] = TRUE
       # We always reject the root node
+      rejections[nodes_depth_d] = TRUE
+      # Initialize R^{1:1}
+      R_to_d_minus_1 = degrees[nodes_depth_d] - 1
       print(paste0("Nodes ", nodes_depth_d ," at level ", d, " are rejected."))
       print(paste0("Now moving to depth ", d+1))
     }
@@ -172,18 +176,13 @@ hierarchical_test = function(tree = NULL, p_vals, alpha, independent = TRUE){
         if(length(nodes_to_test_depth_d)>0){
           ifrejected = make_rejection(d, nodes_to_test_depth_d, alpha, reshaping_func,
                                       p, D=max_depth-1, Deltas, p_vals,
-                                      leaves, depths, degrees, degrees_rej,
-                                      rejections)
-
+                                      leaves, depths, degrees,
+                                      rejections, R_to_d_minus_1)
+          # Update R^{1:(d-1)}
+          R_to_d_minus_1 = ifrejected$R_to_d_minus_1
           # determine who gets rejected
           rejected_nodes_depth_d = nodes_to_test_depth_d[ifrejected$rejected_d]
           if(length(rejected_nodes_depth_d)!=0){
-            # update degrees_rej
-            rejected_nodes_parent_table = table(sapply(rejected_nodes_depth_d, find_parent_in_list, hc_list))
-            for(i in 1:length(rejected_nodes_parent_table)){
-              degrees_rej[as.numeric(names(rejected_nodes_parent_table)[i])] = rejected_nodes_parent_table[i]
-            }
-
             # update rejections and thresholds
             rejections[rejected_nodes_depth_d] = TRUE
             threshold_functions[nodes_to_test_depth_d] = ifrejected$crit_func_d
