@@ -8,9 +8,9 @@ test_that("Testing yields an aggregation", {
                         independent = FALSE)
   expect_equal(length(result), 4)
   expect_equal(result[[1]], 0.4)
-  expect_equal(sum(result[[2]]), 49)
-  expect_equal(sum(is.na(result[[3]])), 117)
-  expect_equal(max(result[[4]]), 53)
+  expect_equal(sum(result[[2]]), 48)
+  expect_equal(sum(is.na(result[[3]])), 119)
+  expect_equal(max(result[[4]]), 52)
 })
 
 test_that("Calculating fsp and power",{
@@ -30,8 +30,8 @@ test_that("Aggregating observations", {
                       alpha = 0.3)
 
   expect_equal(agg_result[[1]], 0.3)
-  expect_equal(max(agg_result[[2]]), 71)
-  expect_equal(sum(agg_result[[3]]), 20)
+  expect_equal(max(agg_result[[2]]), 52)
+  expect_equal(sum(agg_result[[3]]), 10)
 })
 
 test_that("Aggregating features", {
