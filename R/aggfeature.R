@@ -169,7 +169,13 @@ aggregate_features = function(y, X, sigma = NULL, tree= NULL, alpha){
   #center response and design matrix
   y = as.vector(y)
   y = y - mean(y)
-  X = as.matrix(apply(X, 2, function(x){if(sd(x)!=0) (x-mean(x, na.rm = T))/sd(x)}))
+  X = as.matrix(apply(X, 2, function(x) {
+    if(sd(x) != 0){
+      (x - mean(x, na.rm = T))/sd(x)
+    }else{
+      x
+    }
+  }))
 
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
