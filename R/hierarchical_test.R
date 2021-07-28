@@ -181,13 +181,15 @@ hierarchical_test = function(tree = NULL, p_vals, alpha, independent = TRUE){
                                       rejections, R_to_d_minus_1)
           # Update R^{1:(d-1)}
           R_to_d_minus_1 = ifrejected$R_to_d_minus_1
+
           # determine who gets rejected
           rejected_nodes_depth_d = nodes_to_test_depth_d[ifrejected$rejected_d]
           if(length(rejected_nodes_depth_d)!=0){
-            # update rejections and thresholds
+            # update rejections
             rejections[rejected_nodes_depth_d] = TRUE
-            threshold_functions[nodes_to_test_depth_d] = ifrejected$crit_func_d
           }
+          # update thresholds
+          threshold_functions[nodes_to_test_depth_d] = ifrejected$crit_func_d
         }
         else{
           print(paste0("Stop moving to next level because no nodes at depth ",
