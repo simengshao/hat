@@ -48,6 +48,70 @@ optimal_mu = function(Sigma, hbetaGA){
 }
 
 
+pvalue_node_step = function(u, leaves_index, hbeta, Sigma_hat, Dmat,
+                            constr_matrix, constr_dir,
+                            constraint_matrix, X, y, hsigma, n, p, t){
+  # This function computes p-value for a single node
+  n_leaves = length(leaves_index)
+  # Use the projection matrix
+  D_matrix = diag(1, n_leaves) - 1/n_leaves * matrix(1, n_leaves, n_leaves)
+
+  if(n_leaves == 2){
+    A = D_matrix %*% t(D_matrix)
+  }else{
+    A = crossprod(D_matrix)
+  }
+
+  hbeta_G = hbeta[leaves_index]
+  hbetaGA = hbeta_G %*% A
+  norm_hbetaGA = norm(hbetaGA, "2")
+  if(norm_hbetaGA>0){
+
+    Sigmahat_hbetaGA =  Sigma_hat %*%
+      c(as.numeric(hbetaGA), rep(0, p-length(hbetaGA)))/norm_hbetaGA
+
+    # solve lp for mu
+    mu = optimal_mu_lp(p, hbetaGA, Sigmahat_hbetaGA, constr_matrix, constr_dir)
+    if(mu == 0){
+      mu = optimal_mu(Sigma_hat, hbetaGA)
+    }
+
+    if(mu<10^(-15)){
+      # avoid problem caused by floating precision
+      mu = 0.0001
+    }
+
+    # relax the bound
+    res <- 1.1
+    mu2 = mu *res
+
+    # Find the optimal projection direction u_A
+    constraint_matrix[,p+1] = Sigmahat_hbetaGA
+    constraint_matrix[,2*p+2] = -Sigmahat_hbetaGA
+
+    temp <- c(as.numeric(hbetaGA), rep(0, p-length(hbetaGA)), norm(hbetaGA, "2"))
+    constraint_vector = c(temp - mu2, -temp - mu2)
+
+    result = quadprog::solve.QP(Dmat = Dmat, dvec = rep(0, p),
+                                Amat = constraint_matrix, bvec = constraint_vector)
+
+    proj_uA = result$solution
+    optvalue = result$value
+
+
+  }else{
+    mu = 0
+    proj_uA = rep(0,p)
+    optvalue = 0
+
+  }
+
+  Q_A = sum(hbetaGA * hbeta_G) + 2/n* sum(proj_uA * crossprod(X, y - X %*% hbeta))
+  V_A = 4* hsigma^2/n * optvalue + t/n
+  p_val = 2*(1- pnorm(as.numeric(abs(Q_A)), mean = 0, sd = as.numeric(sqrt(V_A))))
+  return(p_val)
+}
+
 pvalue_group_all = function(hc_list, X, Sigma_hat, Dmat=NULL, hbeta, hsigma, y, t=1){
   # hc_list: list length of $T\L$ for storing tree structure
   # X: n by p design matix
@@ -72,65 +136,10 @@ pvalue_group_all = function(hc_list, X, Sigma_hat, Dmat=NULL, hbeta, hsigma, y, 
   ps = rep(0, n_interiornodes)
   for(u in 1:n_interiornodes){
     leaves_index = find_leaves_in_list(u, hc_list)
-    n_leaves = length(leaves_index)
 
-    # Use the projection matrix
-    D_matrix = diag(1, n_leaves) - 1/n_leaves * matrix(1, n_leaves, n_leaves)
-
-    if(n_leaves == 2){
-      A = D_matrix %*% t(D_matrix)
-    }else{
-      A = crossprod(D_matrix)
-    }
-
-    hbeta_G = hbeta[leaves_index]
-    hbetaGA = hbeta_G %*% A
-    norm_hbetaGA = norm(hbetaGA, "2")
-    if(norm_hbetaGA>0){
-
-      Sigmahat_hbetaGA =  Sigma_hat %*%
-        c(as.numeric(hbetaGA), rep(0, p-length(hbetaGA)))/norm_hbetaGA
-
-      # solve lp for mu
-      mu = optimal_mu_lp(p, hbetaGA, Sigmahat_hbetaGA, constr_matrix, constr_dir)
-      if(mu == 0){
-        mu = optimal_mu(Sigma_hat, hbetaGA)
-      }
-
-      if(mu<10^(-15)){
-        # avoid problem caused by floating precision
-        mu = 0.0001
-      }
-
-      # relax the bound
-      res <- 1.1
-      mu2 = mu *res
-
-      # Find the optimal projection direction u_A
-      constraint_matrix[,p+1] = Sigmahat_hbetaGA
-      constraint_matrix[,2*p+2] = -Sigmahat_hbetaGA
-
-      temp <- c(as.numeric(hbetaGA), rep(0, p-length(hbetaGA)), norm(hbetaGA, "2"))
-      constraint_vector = c(temp - mu2, -temp - mu2)
-
-      result = quadprog::solve.QP(Dmat = Dmat, dvec = rep(0, p),
-                        Amat = constraint_matrix, bvec = constraint_vector)
-
-      proj_uA = result$solution
-      optvalue = result$value
-
-
-    }else{
-      mu = 0
-      proj_uA = rep(0,p)
-      optvalue = 0
-
-    }
-
-    Q_A = sum(hbetaGA * hbeta_G) + 2/n* sum(proj_uA * crossprod(X, y - X %*% hbeta))
-    V_A = 4* hsigma^2/n * optvalue + t/n
-    ps[u] = 2*(1- pnorm(as.numeric(abs(Q_A)), mean = 0, sd = as.numeric(sqrt(V_A))))
-
+    ps[u] = pvalue_node_step(u, leaves_index, hbeta, Sigma_hat, Dmat,
+                             constr_matrix, constr_dir,
+                             constraint_matrix, X, y, hsigma, n, p, t)
   }
 
   return(ps = ps)
@@ -160,7 +169,13 @@ aggregate_features = function(y, X, sigma = NULL, tree= NULL, alpha){
   #center response and design matrix
   y = as.vector(y)
   y = y - mean(y)
-  X = as.matrix(apply(X, 2, function(x){if(sd(x)!=0) (x-mean(x, na.rm = T))/sd(x)}))
+  X = as.matrix(apply(X, 2, function(x) {
+    if(sd(x) != 0){
+      (x - mean(x, na.rm = T))/sd(x)
+    }else{
+      x
+    }
+  }))
 
 
   # transform dendrogram to a list of length |T\L| (number of interior nodes). Item i in the list stores the children node of node i.
