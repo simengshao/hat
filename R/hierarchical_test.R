@@ -52,7 +52,7 @@ make_rejection = function(d, nodes_depth_d, nodes, alpha, reshaping_func,
       crit_func_d[which(is.na(crit_func_d))] = 1
     }else if(reshaping_func == "BY")
     {
-      denoms = harmonic_diff(sum(degrees)-1, d*(delta_min-1))
+      denoms = harmonic_diff(sum(degrees[nodes_depth_d])-1, d*(delta_min-1))
       crit_func_d =  alpha *leaves_d *(R_to_d_minus_1 - 1+r)/
         (p*(Delta-1/Delta) * D)/denoms
       crit_func_d[which(is.na(crit_func_d))] = 1
