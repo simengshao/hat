@@ -34,7 +34,7 @@ pvalue_anova_all = function(y, hc_list, sigma = NULL, simes = TRUE){
       if(n_leaves == n_deg){
         p_value = pchisq(sb_2/sigma_est^2, df= n_deg-1 , lower.tail=FALSE)
       }else{
-        p_value = stats::pf(sb_2/sw_2, n_deg-1, n_leaves - n_deg); if(p_value>.5) p_value = 1-p_value
+        p_value = stats::pf(sb_2/sw_2, n_deg-1, n_leaves - n_deg, lower.tail = FALSE)
       }
     }else{
       # calculate the chi-statistic and p-value
@@ -69,6 +69,7 @@ pvalue_anova_all = function(y, hc_list, sigma = NULL, simes = TRUE){
 #' \item{alpha}{The target FSR level.}
 #' \item{groups}{A length-\code{n-observation} vector of integers indicating the cluster to which each observation is allocated.}
 #' \item{rejections}{A length-(\code{num_interior_nodes}) vector indicating whether each node is rejected.}
+#' \item{p_vals}{A length-(\code{num_interior_nodes}) vector of the p-value (note: all are computed although not all are used in the sequential testing procedure)}
 #' @examples
 #' set.seed(123)
 #' hc = hclust(dist((1:20) + runif(20)/20), method = "complete")
@@ -102,6 +103,6 @@ aggregate_observations = function(y, sigma = NULL, tree= NULL, alpha){
   result = hierarchical_test(tree = hc_list, p_vals = p_vals, alpha = alpha, independent = FALSE)
   groups = result$groups
   rejections = result$rejections
-  return(list(alpha = alpha, groups = groups, rejections = rejections))
+  return(list(alpha = alpha, groups = groups, rejections = rejections, p_vals = p_vals))
 
 }

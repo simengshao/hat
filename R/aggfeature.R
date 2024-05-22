@@ -160,6 +160,7 @@ pvalue_group_all = function(hc_list, X, Sigma_hat, Dmat=NULL, hbeta, hsigma, y, 
 #' \item{alpha}{The target FSR level.}
 #' \item{groups}{A length-\code{n-feature} vector of integers indicating the cluster to which each feature is allocated.}
 #' \item{rejections}{A length-(\code{num_interior_nodes}) vector indicating whether each node is rejected.}
+#' \item{p_vals}{A length-(\code{num_interior_nodes}) vector of the p-value (note: all are computed although not all are used in the sequential testing procedure)}
 #' @examples
 #' ## See vignette for a small data example.
 #' @importFrom stats pnorm runif sd
@@ -221,6 +222,6 @@ aggregate_features = function(y, X, sigma = NULL, tree= NULL, alpha){
   groups = result$groups
   rejections = result$rejections
 
-  return(list(alpha = alpha, groups = groups, rejections = rejections))
+  return(list(alpha = alpha, groups = groups, rejections = rejections, p_vals = p_vals))
 
 }
