@@ -86,7 +86,7 @@ result = aggregate_observations(y = log(stocks_volatility$volatility),
 
 * `alpha`: target FSR level.
 
-The output `result` is a list that has three components: `alpha` is the target FSR level, `groups` gives the group assignments of the observations, and `rejections` indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree).
+The output `result` is a list that has four components: `alpha` is the target FSR level, `groups` gives the group assignments of the observations, `rejections` indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree), and `p_vals` gives all the p-values that were computed internally.
 
 In this example, the achieved aggregation result contains `r length(unique(result$groups))` groups. We plot the achieved aggregation on the tree using the function `plot_aggregation` (a bit busy as since are >2k stocks...).
 
