@@ -28,6 +28,7 @@ Returns the aggregation result.
 \item{alpha}{The target FSR level.}
 \item{groups}{A length-\code{n-feature} vector of integers indicating the cluster to which each feature is allocated.}
 \item{rejections}{A length-(\code{num_interior_nodes}) vector indicating whether each node is rejected.}
+\item{p_vals}{A length-(\code{num_interior_nodes}) vector of the p-value (note: all are computed although not all are used in the sequential testing procedure)}
 }
 \description{
 This function achieves rare features aggregation while simultaneously controlling False Split Rate under a target level.
