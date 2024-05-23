@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial to Use the HAT Package in R • hat</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -110,8 +110,9 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">hat</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">stocks_volatility</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2538</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">stocks_volatility</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2538</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">stocks_volatility</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "ID"         "name"       "volatility"</span></span></code></pre></div>
 <p>The <code>stocks_volatility</code> data set contains 2538 stocks’ corresponding company names and the volatility during the 5-year period.</p>
 <p>The distribution of volatility is right-skewed. Therefore, in our analysis, we will take the logarithm to reduce skew.</p>
@@ -131,7 +132,7 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <li><p>Use the hierarchical aggregation testing procedure to sequentially go down the tree in a fashion that will control the FSR of the overall aggregation of leaves that is produced.</p></li>
 </ol>
 <p>The function <code>aggregate_observations</code> performs both of these steps:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">=</span> <span class="fu"><a href="../reference/aggregate_observations.html">aggregate_observations</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">stocks_volatility</span><span class="op">$</span><span class="va">volatility</span><span class="op">)</span>, </span>
 <span>                       sigma <span class="op">=</span> <span class="cn">NULL</span>, </span>
 <span>                       tree <span class="op">=</span> <span class="va">stocks_tree</span>, </span>
@@ -141,34 +142,29 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <span><span class="co">#&gt; [1] "The rejected nodes in level 2 are 3222"</span></span>
 <span><span class="co">#&gt; [2] "The rejected nodes in level 2 are 3230"</span></span>
 <span><span class="co">#&gt;  [1] "The critical function at nodes in level 2 are 5.32976776663965e-05"</span></span>
-<span><span class="co">#&gt;  [2] "The critical function at nodes in level 2 are 3.80697697617118e-05"</span></span>
-<span><span class="co">#&gt;  [3] "The critical function at nodes in level 2 are 0.000369699764130401"</span></span>
-<span><span class="co">#&gt;  [4] "The critical function at nodes in level 2 are 0.000487293052949911"</span></span>
-<span><span class="co">#&gt;  [5] "The critical function at nodes in level 2 are 6.34496162695196e-05"</span></span>
-<span><span class="co">#&gt;  [6] "The critical function at nodes in level 2 are 6.34496162695196e-05"</span></span>
-<span><span class="co">#&gt;  [7] "The critical function at nodes in level 2 are 2.87638260421822e-05"</span></span>
-<span><span class="co">#&gt;  [8] "The critical function at nodes in level 2 are 3.72237748781182e-05"</span></span>
-<span><span class="co">#&gt;  [9] "The critical function at nodes in level 2 are 2.53798465078079e-06"</span></span>
-<span><span class="co">#&gt; [10] "The critical function at nodes in level 2 are 0.000220804664617928"</span></span>
-<span><span class="co">#&gt; [11] "The critical function at nodes in level 2 are 0.000422151446913204"</span></span>
-<span><span class="co">#&gt; [12] "The critical function at nodes in level 2 are 4.22997441796798e-05"</span></span>
-<span><span class="co">#&gt; [13] "The critical function at nodes in level 2 are 6.51416060367068e-05"</span></span>
-<span><span class="co">#&gt; [14] "The critical function at nodes in level 2 are 4.82217083648349e-05"</span></span>
-<span><span class="co">#&gt; [15] "The critical function at nodes in level 2 are 1.01519386031231e-05"</span></span>
-<span><span class="co">#&gt; [16] "The critical function at nodes in level 2 are 1.35359181374975e-05"</span></span>
-<span><span class="co">#&gt; [17] "The critical function at nodes in level 2 are 7.61395395234236e-06"</span></span>
+<span><span class="co">#&gt;  [2] "The critical function at nodes in level 2 are 0.000369699764130401"</span></span>
+<span><span class="co">#&gt;  [3] "The critical function at nodes in level 2 are 0.000487293052949911"</span></span>
+<span><span class="co">#&gt;  [4] "The critical function at nodes in level 2 are 6.34496162695196e-05"</span></span>
+<span><span class="co">#&gt;  [5] "The critical function at nodes in level 2 are 2.87638260421822e-05"</span></span>
+<span><span class="co">#&gt;  [6] "The critical function at nodes in level 2 are 3.72237748781182e-05"</span></span>
+<span><span class="co">#&gt;  [7] "The critical function at nodes in level 2 are 2.53798465078079e-06"</span></span>
+<span><span class="co">#&gt;  [8] "The critical function at nodes in level 2 are 0.000220804664617928"</span></span>
+<span><span class="co">#&gt;  [9] "The critical function at nodes in level 2 are 0.000422151446913204"</span></span>
+<span><span class="co">#&gt; [10] "The critical function at nodes in level 2 are 6.51416060367068e-05"</span></span>
+<span><span class="co">#&gt; [11] "The critical function at nodes in level 2 are 4.82217083648349e-05"</span></span>
+<span><span class="co">#&gt; [12] "The critical function at nodes in level 2 are 1.01519386031231e-05"</span></span>
+<span><span class="co">#&gt; [13] "The critical function at nodes in level 2 are 1.35359181374975e-05"</span></span>
+<span><span class="co">#&gt; [14] "The critical function at nodes in level 2 are 7.61395395234236e-06"</span></span>
 <span><span class="co">#&gt; [1] "Now moving to depth 3"</span></span>
 <span><span class="co">#&gt; [1] "The rejected nodes in level 3 are 3161"</span></span>
 <span><span class="co">#&gt; [2] "The rejected nodes in level 3 are 3200"</span></span>
 <span><span class="co">#&gt; [1] "The critical function at nodes in level 3 are 4.85296943089359e-06"</span></span>
-<span><span class="co">#&gt; [2] "The critical function at nodes in level 3 are 1.5367736531163e-05" </span></span>
-<span><span class="co">#&gt; [3] "The critical function at nodes in level 3 are 3.23531295392906e-06"</span></span>
-<span><span class="co">#&gt; [4] "The critical function at nodes in level 3 are 1.29412518157163e-05"</span></span>
-<span><span class="co">#&gt; [5] "The critical function at nodes in level 3 are 0.000294413478807545"</span></span>
-<span><span class="co">#&gt; [6] "The critical function at nodes in level 3 are 1.37500800541985e-05"</span></span>
-<span><span class="co">#&gt; [7] "The critical function at nodes in level 3 are 8.89711062330492e-06"</span></span>
-<span><span class="co">#&gt; [8] "The critical function at nodes in level 3 are 0.000280663398753346"</span></span>
-<span><span class="co">#&gt; [9] "The critical function at nodes in level 3 are 5.1765007262865e-05" </span></span>
+<span><span class="co">#&gt; [2] "The critical function at nodes in level 3 are 3.23531295392906e-06"</span></span>
+<span><span class="co">#&gt; [3] "The critical function at nodes in level 3 are 1.29412518157163e-05"</span></span>
+<span><span class="co">#&gt; [4] "The critical function at nodes in level 3 are 0.000294413478807545"</span></span>
+<span><span class="co">#&gt; [5] "The critical function at nodes in level 3 are 8.89711062330492e-06"</span></span>
+<span><span class="co">#&gt; [6] "The critical function at nodes in level 3 are 0.000280663398753346"</span></span>
+<span><span class="co">#&gt; [7] "The critical function at nodes in level 3 are 5.1765007262865e-05" </span></span>
 <span><span class="co">#&gt; [1] "Now moving to depth 4"</span></span>
 <span><span class="co">#&gt; [1] "Now moving to depth 5"</span></span>
 <span><span class="co">#&gt; [1] "Stop moving to next level because no nodes at depth 5 are rejected."</span></span></code></pre></div>
@@ -177,9 +173,9 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <li><p><code>tree</code>: a list of length-<span class="math inline">\(|\mathcal{T}\setminus \mathcal{L}|\)</span> that describes the tree structure. This format is a generalization of the <code>merge</code> matrix within an <code>hclust</code> object. The element <code>hc_list[[i]]</code> contains the children of the <span class="math inline">\(i\)</span>-th node on the tree. A negative value indicates that the child is a leaf node while positive values are interior nodes. For example, if <code>hc_list[[i]][j]</code> is positive, that means that node <code>hc_list[[i]]</code> is a parent of node <code>hc_list[[j]]</code>. The object <code>stocks_tree</code> in our package is an example of such a structure. The function can also work with <code>hclust</code> objects (for binary trees) or <code>dendrogram</code> objects (for more general trees). The functions <code>dend_as_hclist</code> and <code>hclist_as_dend</code> allow one to switch between formats.</p></li>
 <li><p><code>alpha</code>: target FSR level.</p></li>
 </ul>
-<p>The output <code>result</code> is a list that has three components: <code>alpha</code> is the target FSR level, <code>groups</code> gives the group assignments of the observations, and <code>rejections</code> indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree).</p>
+<p>The output <code>result</code> is a list that has four components: <code>alpha</code> is the target FSR level, <code>groups</code> gives the group assignments of the observations, <code>rejections</code> indicates if each interior node is rejected (this will come in handy for plotting the aggregation result on a tree), and <code>p_vals</code> gives all the p-values that were computed internally.</p>
 <p>In this example, the achieved aggregation result contains 40 groups. We plot the achieved aggregation on the tree using the function <code>plot_aggregation</code> (a bit busy as since are &gt;2k stocks…).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_aggregation.html">plot_aggregation</a></span><span class="op">(</span>rejections <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="va">rejections</span>, tree <span class="op">=</span> <span class="va">stocks_tree</span><span class="op">)</span></span></code></pre></div>
 <p><img src="my-vignette_files/figure-html/unnamed-chunk-4-1.png" width="672"></p>
 <p><a id="feature"></a></p>
@@ -196,7 +192,7 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <li><p><code>hc</code>: an object that describes the tree structure. Since here we have a binary tree, we use a <code>tree = hclust</code> object. Alternatively, one can also use <code>tree = dendrogram</code> or <code>tree = hc_list</code> if they have a non-binary tree that is saved in the format of ‘dendrogram’ or ‘hc_list’.</p></li>
 <li><p><code>alpha</code>: target FSR level.</p></li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">agg_result</span> <span class="op">=</span> <span class="fu"><a href="../reference/aggregate_features.html">aggregate_features</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, X <span class="op">=</span> <span class="va">X</span>,</span>
 <span>                          tree <span class="op">=</span> <span class="va">hc</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Finished model fits for alpha[1].</span></span>
@@ -257,7 +253,7 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <span><span class="co">#&gt; [1] "Now moving to depth 5"</span></span>
 <span><span class="co">#&gt; [1] "Stop moving to next level because no nodes at depth 5 are rejected."</span></span></code></pre></div>
 <p>For calculating FSP we can use</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/calculate_fsp.html">calculate_fsp</a></span><span class="op">(</span>theta_est <span class="op">=</span> <span class="va">agg_result</span><span class="op">$</span><span class="va">groups</span>, theta_true <span class="op">=</span> <span class="va">groups</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
 <p><a id="general"></a></p>
@@ -268,7 +264,7 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <p>The functions <code>aggregate_observations</code> and <code>aggregate_features</code> shown above both make use of the hierarchical aggregation testing framework introduced in the paper “Controlling the False Split Rate in Tree-Based Aggregation”. Internally, both functions call a more general function called <code>hierarchical_testing</code>. If a user has a different way to construct nodewise p-values for aggregation, then the user should use <code>hierarchical_testing</code> as shown here.</p>
 <p>This function takes a length-<code>num_interior_node</code> vector of p-values.</p>
 <p>Here is a small example:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
 <span><span class="va">hc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">hclust</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -302,8 +298,9 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 <span><span class="co">#&gt; [2] "The critical function at nodes in level 3 are 0.105329153605016"</span></span>
 <span><span class="co">#&gt; [3] "The critical function at nodes in level 3 are 0.105329153605016"</span></span>
 <span><span class="co">#&gt; [1] "Now moving to depth 4"</span></span>
-<span><span class="co">#&gt; [1] "Stop moving to next level because no nodes at depth 4 are rejected."</span></span>
-<span></span>
+<span><span class="co">#&gt; [1] "Stop moving to next level because no nodes at depth 4 are rejected."</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/plot_aggregation.html">plot_aggregation</a></span><span class="op">(</span>rejections <span class="op">=</span> <span class="va">result_small</span><span class="op">$</span><span class="va">rejections</span>, tree <span class="op">=</span> <span class="va">hc_list</span><span class="op">)</span></span></code></pre></div>
 <p><img src="my-vignette_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <div class="section level3 unnumbered">
@@ -338,7 +335,7 @@ y_i = \theta_{k(i)} + \epsilon_i, \ \ \ k(i)\in\{1,...,K\}, i\in \{1, ..., p\},
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer>
